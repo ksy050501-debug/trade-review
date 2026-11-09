@@ -149,8 +149,8 @@ function mapSVG(cid,d,act,chk,interactive){
   const kr=L.PLACES.find(p=>p.home);
   const arrows=L.S4.items.filter(it=>d[it.id]&&d[it.id].place).map(it=>{const v=d[it.id],p=L.placeById(v.place);if(!p)return '';
     const from=v.dir==='ex'?kr:p,to=v.dir==='ex'?p:kr;const a=M.arc(from,to,v.dir?0.2:0.2);
-    const cls=v.dir==='ex'?'ex':v.dir==='im'?'im':'nd';const on=it.id===act;const ip=a.at(v.dir==='ex'?0.72:0.28);
-    return `<g class="arrow ${cls}${on?' on':''}"><path d="${a.d}" marker-end="url(#ah-${cls})"/><g transform="translate(${ip[0]-15},${ip[1]-15})"><circle cx="15" cy="15" r="17" class="ab"/><svg width="30" height="30" viewBox="0 0 48 48">${ICON[it.icon]}</svg></g></g>`}).join('');
+    const cls=v.dir==='ex'?'ex':v.dir==='im'?'im':'nd';const on=it.id===act;
+    return `<g class="arrow ${cls}${on?' on':''}"><path d="${a.d}" marker-end="url(#ah-${cls})"/></g>`}).join('');
   const pins=L.PLACES.map(p=>{const x=M.px(p.lon),y=M.py(p.lat);const sel=act&&d[act]&&d[act].place===p.id;const lx=p.id==='sa'||p.id==='no'?x+14:x+14;
     return p.home?`<g class="pin home"><circle cx="${x}" cy="${y}" r="11"/><text x="${x+15}" y="${y-8}">대한민국</text></g>`
       :`<g class="pin${sel?' sel':''}"${interactive?` data-a="s4-place" data-c="${cid}" data-v="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}"`:''}><circle cx="${x}" cy="${y}" r="22" class="hit"/><circle cx="${x}" cy="${y}" r="10"/><text x="${lx}" y="${y+22}">${esc(p.name)}</text></g>`}).join('');
