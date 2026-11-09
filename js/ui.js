@@ -77,7 +77,7 @@ function saveDraft(cid,key){store.set(draftKey(cid,key),JSON.stringify(ui.drafts
 
 const STAGE_INTRO={
  1:'오늘 우리 모둠은 무역 탐정단이에요. 태블릿은 하나, 머리는 여럿! 함께 의논해서 사건을 풀어요.',
- 2:'지난 시간에 배운 낱말이에요. 낱말마다 알맞은 뜻을 찾아 짝지어 주세요.',
+ 2:'무역·수출·수입의 뜻을 떠올리며, 문장이 진짜인지 가짜인지 모둠이 함께 판정해 주세요.',
  3:'카드에 적힌 일이 우리나라 입장에서 수출인지 수입인지 골라 주세요.',
  4:'물건마다 어느 나라와 오가는지 지도에서 찾고, 수출인지 수입인지 골라 주세요.',
  5:'이상한 사실 카드를 하나 골라 "왜 그럴까?" 모둠의 추측과 더 알고 싶은 질문을 적어요.',
@@ -85,10 +85,10 @@ const STAGE_INTRO={
 };
 const TEACHER_GUIDE={
  1:['입장 3분','입장 코드를 띄우고 모둠 태블릿 하나로 나라를 고르게 합니다. 모둠 이름은 내일 수업의 나라 이름과 같아요.'],
- 2:['사건 1 · 5분','낱말 3개(무역·수출·수입) 짝짓기. 처음 제출한 답으로 점수를 매기고, 틀린 것은 고쳐서 다시 내야 사건이 해결됩니다.'],
- 3:['사건 2 · 10분','상황 카드 10장 분류(수출 5, 수입 5). 카드마다 5점. "우리나라 입장에서" 생각하도록 안내해 주세요.'],
- 4:['사건 3 · 10분','물건 7개의 상대 나라와 방향 찾기. 나라 5점 + 방향 5점. 힌트를 읽고 지도에서 찾게 합니다.'],
- 5:['마지막 사건 · 8분','점수가 없는 생각 시간입니다. 답(이유)은 알려 주지 말고, 모둠의 추측과 질문을 모읍니다.'],
+ 2:['사건 1 · 7분','문장 8개 진짜/가짜 판정(진짜 4, 가짜 4). 서비스 무역, 돈의 흐름, 상대 나라 입장, 나라 안 거래를 따져야 풀립니다. 처음 제출한 답으로 점수를 매기고, 틀린 것은 고쳐서 다시 내야 해결됩니다.'],
+ 3:['사건 2 · 9분','상황 카드 10장 분류(수출 5, 수입 5). 카드마다 5점. "우리나라 입장에서" 생각하도록 안내해 주세요.'],
+ 4:['사건 3 · 10분','물건 7개의 상대 나라와 방향 찾기. 나라 5점 + 방향 5점. 사건 기록(배송 이야기)의 지리 단서로 나라를, 이야기의 흐름으로 방향을 찾습니다.'],
+ 5:['마지막 사건 · 7분','점수가 없는 생각 시간입니다. 답(이유)은 알려 주지 말고, 모둠의 추측과 질문을 모읍니다.'],
  6:['수사 보고 · 4분','발표 화면에 네 모둠의 질문이 모입니다. "나라들은 왜 무역을 할까? 내일 국왕이 되어 직접 알아봐요"로 마무리합니다.']
 };
 
@@ -120,18 +120,15 @@ function resultBanner(cid,key){
   const pts=L.stagePoints(key,c.first[key]),max=L.stageMax(key),st=L.status(S,cid,key);
   return `<div class="result ${st}"><b>${st==='done'?'사건 해결!':'틀린 곳이 있어요.'}</b> 처음 제출한 답으로 <b class="num">${pts}/${max}점</b>을 받았어요.${st==='done'?'':' 빨간 표시가 있는 곳을 고쳐서 다시 제출하면 사건이 해결돼요. (점수는 그대로예요)'}</div>`;
 }
-// 사건 1: 낱말 짝짓기
+// 사건 1: 진짜일까, 가짜일까?
 function case1(cid){
   const key='s2',d=draft(cid,key),c=cst(cid);const sub=c.first&&c.first[key];const chk=sub?L.check(key,c.ans[key]):null;
-  const solved=L.status(S,cid,key)==='done';
-  let act=ui.active[cid+'.s2'];if(!act||!L.S2.terms.some(t=>t.id===act))act=(L.S2.terms.find(t=>!d[t.id])||L.S2.terms[0]).id;
-  const termOf=(defId)=>L.S2.terms.find(t=>d[t.id]===defId);
+  const solved=L.status(S,cid,key)==='done';const n=L.S2.cards.filter(x=>d[x.id]).length;
   return `<section class="panel">${resultBanner(cid,key)}
-   <div class="label" style="margin-bottom:8px">① 낱말을 누르고 ② 알맞은 뜻 카드를 누르세요</div>
-   <div class="terms">${L.S2.terms.map(t=>{const df=L.S2.defs.find(x=>x.id===d[t.id]);const mark=chk&&sub&&L.clone(c.ans[key])[t.id]===d[t.id]?(chk[t.id]?'ok':'no'):'';
-     return `<button class="term${act===t.id?' on':''}${mark?' '+mark:''}" data-a="s2-term" data-c="${cid}" data-v="${t.id}" ${solved?'disabled':''}><b>${esc(t.word)}</b><span>${df?esc(df.text):'뜻을 골라 주세요'}</span>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</button>`}).join('')}</div>
-   <div class="defs">${L.defOrder(cid).map(df=>{const t=termOf(df.id);return `<button class="def${t?' used':''}" data-a="s2-def" data-c="${cid}" data-v="${df.id}" ${solved?'disabled':''}>${t?`<span class="tagw">${esc(t.word)}</span>`:''}${esc(df.text)}</button>`}).join('')}</div>
-   ${solved?'':submitBar(cid,key,L.S2.terms.every(t=>d[t.id]),!sub,'')}</section>`;
+   <div class="ccards">${L.stmtOrder(cid).map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
+     return `<div class="ccard${mark?' '+mark:''}"><div class="ctop"><span class="num cno">${i+1}</span><p class="stmt">${esc(x.text)}</p>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</div>
+       <div class="choice"><button class="ch o${v==='o'?' on':''}" data-a="s2" data-c="${cid}" data-i="${x.id}" data-v="o" ${solved?'disabled':''} aria-pressed="${v==='o'}">진짜 (O)</button><button class="ch x${v==='x'?' on':''}" data-a="s2" data-c="${cid}" data-i="${x.id}" data-v="x" ${solved?'disabled':''} aria-pressed="${v==='x'}">가짜 (X)</button></div></div>`}).join('')}</div>
+   ${solved?'':submitBar(cid,key,n===L.S2.cards.length,!sub,`<span class="num">${n}/${L.S2.cards.length}</span>개 골랐어요`)}</section>`;
 }
 // 사건 2: 수출일까, 수입일까?
 function case2(cid){
@@ -170,7 +167,7 @@ function case3(cid){
    <div class="items4">${L.S4.items.map(x=>{const vv=d[x.id]||{};const r=chk&&same(x)?chk[x.id]:null;const bad=r&&!(r.place&&r.dir);
      return `<button class="it4${x.id===act?' on':''}${r?(bad?' no':' ok'):''}" data-a="s4-item" data-c="${cid}" data-v="${x.id}">${icon(x.icon,34)}<span><b>${esc(x.name)}</b><small>${vv.place?esc(L.placeById(vv.place).name):'나라?'} · ${vv.dir==='ex'?'수출':vv.dir==='im'?'수입':'방향?'}</small></span>${r?(bad?'<i class="mk">✗</i>':'<i class="mk">✓</i>'):''}</button>`}).join('')}</div>
    <div class="mapwrap">${mapSVG(cid,d,act,chk,!solved)}</div>
-   <div class="focus4">${icon(it.icon,52)}<div style="flex:1;min-width:0"><div class="label">지금 고르는 물건</div><h3 style="margin:0">${esc(it.name)}</h3><p class="hint">힌트: ${esc(it.hint)}</p>
+   <div class="focus4">${icon(it.icon,52)}<div style="flex:1;min-width:0"><div class="label">지금 고르는 물건</div><h3 style="margin:0">${esc(it.name)}</h3><p class="hint"><b>사건 기록</b> ${esc(it.hint)}</p>
      ${(()=>{const r=chk&&same(it)?chk[it.id]:null;return r&&!(r.place&&r.dir)?`<p class="warnline">${!r.place?'나라를 다시 생각해 보세요. ':''}${!r.dir?'방향(수출·수입)을 다시 생각해 보세요.':''}</p>`:''})()}
      <div class="row" style="gap:8px;margin-top:6px"><span class="pickedp">${pl?`<b>${esc(pl.name)}</b>`:'지도에서 나라를 눌러 주세요'}</span>
        <div class="choice small"><button class="ch im${v.dir==='im'?' on':''}" data-a="s4-dir" data-c="${cid}" data-v="im" ${solved?'disabled':''}>수입 (그 나라 → 우리나라)</button><button class="ch ex${v.dir==='ex'?' on':''}" data-a="s4-dir" data-c="${cid}" data-v="ex" ${solved?'disabled':''}>수출 (우리나라 → 그 나라)</button></div></div></div></div>
@@ -210,7 +207,7 @@ function studentView(cid){
 const STATUS_LABEL={todo:'<span class="st todo">아직</span>',fix:'<span class="st fix">고치는 중</span>',done:'<span class="st done">해결</span>'};
 function scoreTable(){
   const rk=L.ranking(S,cfg);const seats=extra.seats||null;
-  return `<div class="tablewrap"><table class="mgrid"><thead><tr><th>순위</th><th>모둠</th>${seats?'<th>기기</th>':''}<th>사건 1<br><small>/30</small></th><th>사건 2<br><small>/50</small></th><th>사건 3<br><small>/70</small></th><th>합계<br><small>/${L.MAX_SCORE}</small></th><th>마지막 사건</th></tr></thead><tbody>
+  return `<div class="tablewrap"><table class="mgrid"><thead><tr><th>순위</th><th>모둠</th>${seats?'<th>기기</th>':''}<th>사건 1<br><small>/${L.stageMax('s2')}</small></th><th>사건 2<br><small>/${L.stageMax('s3')}</small></th><th>사건 3<br><small>/${L.stageMax('s4')}</small></th><th>합계<br><small>/${L.MAX_SCORE}</small></th><th>마지막 사건</th></tr></thead><tbody>
    ${rk.map(r=>{const c=C(r.id),sc=L.score(S,r.id),seat=seats?seats[r.id]:null;
      const cell=(k)=>`<td class="${keyOf(S.stage)===k?'cur':''}"><b class="num">${sc.per[k]==null?'-':sc.per[k]}</b><br>${STATUS_LABEL[L.status(S,r.id,k)]}</td>`;
      return `<tr><td class="num"><b>${r.rank}</b></td><td><span class="itemhead">${flag(c,22)}<b>${esc(c.name)}</b></span></td>${seats?`<td>${seat?`<span class="dot ${seat.online?'':'off'}"></span> ${seat.online?'접속 중':'끊김'}`:'<span class="dot idle"></span> 비어 있음'}</td>`:''}${cell('s2')}${cell('s3')}${cell('s4')}<td class="num"><b style="font-size:18px">${sc.total}</b></td><td class="${S.stage===5?'cur':''}">${STATUS_LABEL[L.status(S,r.id,'s5')]}</td></tr>`}).join('')}
@@ -230,7 +227,7 @@ function teacherView(){
    <section class="panel"><h2>모둠별 점수와 진행</h2>${scoreTable()}<p class="muted" style="margin:8px 0 0;font-size:13px">점수는 처음 제출한 답으로 매깁니다. '고치는 중'은 제출했지만 아직 틀린 곳이 있는 모둠이에요.</p></section>
    ${S.stage>=5?`<section class="panel"><h2>모둠의 추측과 질문</h2>${curiousList()}</section>`:''}
    <section class="panel"><details><summary><h2 style="font-size:19px;display:inline">정답 보기 (교사용)</h2></summary><div class="grid2" style="margin-top:12px">
-     <div><h3>사건 1</h3><ul class="anslist">${L.S2.terms.map(t=>`<li><b>${esc(t.word)}</b>: ${esc(L.S2.defs.find(d=>d.answer===t.id).text)}</li>`).join('')}</ul>
+     <div><h3>사건 1</h3><ul class="anslist">${L.S2.cards.map(x=>`<li>${esc(x.text)} → <b>${x.answer==='o'?'진짜':'가짜'}</b><br><span class="muted">${esc(x.why)}</span></li>`).join('')}</ul>
        <h3>사건 2</h3><ul class="anslist">${L.S3.cards.map((x,i)=>`<li>${i+1}. ${esc(x.text)} → <b>${x.answer==='ex'?'수출':'수입'}</b></li>`).join('')}</ul></div>
      <div><h3>사건 3</h3><ul class="anslist">${L.S4.items.map(x=>`<li><b>${esc(x.name)}</b>: ${esc(L.placeById(x.place).name)} · ${x.dir==='ex'?'수출':'수입'}</li>`).join('')}</ul></div></div></details></section>
    ${demoTail}`;
@@ -269,11 +266,11 @@ function helperHint(){
   if(st===1)return '탐정단 약속을 함께 읽어요. 선생님이 사건 1을 열면 시작해요.';
   if(st===6)return '오늘 남긴 질문을 기억해 두세요. 내일 국왕이 되어 직접 실험해 보면 답을 찾을 수 있어요!';
   if(stt==='done')return st===5?'모둠 생각을 보냈어요. 다른 카드에 대해서도 이야기해 봐요.':'사건 해결! 다음 사건이 열릴 때까지 다른 모둠 차례를 기다려요.';
-  if(st===2)return stt==='fix'?'✗ 표시가 있는 낱말을 다시 눌러 다른 뜻을 골라 보세요. "수출"은 내보내는 것, "수입"은 들여오는 것이에요.':'먼저 위의 낱말(무역·수출·수입)을 누르고, 아래에서 알맞은 뜻 카드를 눌러요.';
+  if(st===2)return stt==='fix'?'✗ 문장을 다시 천천히 읽어 보세요. 물건만인지, 돈은 어느 쪽으로 가는지, 나라와 나라 사이인지 따져 봐요.':'문장을 한 사람이 소리 내어 읽고, 모둠이 진짜인지 가짜인지 의논한 뒤 눌러요.';
   if(st===3)return stt==='fix'?'✗ 카드를 다시 읽어 보세요. 우리나라에서 나가면 수출, 우리나라로 들어오면 수입이에요.':'"우리나라 입장에서" 생각해요. 물건이 우리나라에서 나가나요, 들어오나요?';
   if(st===4){const d=draft(cid,'s4');const it=L.S4.items.find(x=>!(d[x.id]&&d[x.id].place&&d[x.id].dir));
-    if(stt==='fix')return '✗ 물건을 눌러 힌트를 다시 읽고, 나라나 방향을 고쳐 보세요.';
-    return it?`위에서 물건을 고르고, 힌트를 읽고 지도에서 나라를 눌러요. 그다음 수출인지 수입인지 골라요. (아직: ${it.name})`:'7개를 모두 골랐어요. 화살표 방향을 확인하고 제출해요!'}
+    if(stt==='fix')return '✗ 물건을 눌러 사건 기록을 다시 읽고, 나라나 방향을 고쳐 보세요.';
+    return it?`위에서 물건을 고르고 사건 기록을 읽어요. 어느 나라인지 지도에서 누르고, 물건이 우리나라로 들어왔는지 나갔는지 골라요. (아직: ${it.name})`:'7개를 모두 골랐어요. 화살표 방향을 확인하고 제출해요!'}
   if(st===5)return '정답은 없어요! 카드를 하나 고르고, 모둠 친구들의 생각을 모아 "~때문일 것 같아요"라고 적어 보세요.';
   return null;
 }
@@ -313,10 +310,7 @@ function onClick(e){
   if(!B||!S)return;
   if(a==='view')return setView(b.dataset.v);
   if(a==='fullscreen'){try{document.documentElement.requestFullscreen().catch(()=>{})}catch(err){}return}
-  if(a==='s2-term'){ui.active[cid+'.s2']=b.dataset.v;return render(true)}
-  if(a==='s2-def'){const d=draft(cid,'s2');let act=ui.active[cid+'.s2']||(L.S2.terms.find(t=>!d[t.id])||L.S2.terms[0]).id;
-    L.S2.terms.forEach(t=>{if(d[t.id]===b.dataset.v)delete d[t.id]});d[act]=b.dataset.v;saveDraft(cid,'s2');
-    const nx=L.S2.terms.find(t=>!d[t.id]);ui.active[cid+'.s2']=nx?nx.id:act;return render(true)}
+  if(a==='s2'){const d=draft(cid,'s2');d[b.dataset.i]=b.dataset.v;saveDraft(cid,'s2');return render(true)}
   if(a==='s3'){const d=draft(cid,'s3');d[b.dataset.i]=b.dataset.v;saveDraft(cid,'s3');return render(true)}
   if(a==='s4-item'){ui.active[cid+'.s4']=b.dataset.v;return render(true)}
   if(a==='s4-place'||a==='s4-dir'){const d=draft(cid,'s4');const act=ui.active[cid+'.s4']||(L.S4.items.find(it=>!(d[it.id]&&d[it.id].place&&d[it.id].dir))||L.S4.items[0]).id;ui.active[cid+'.s4']=act;

@@ -32,7 +32,8 @@ async def route(context):
 
 
 
-RIGHT2 = {'trade': 'd1', 'export': 'd2', 'import': 'd3'}
+RIGHT2 = {'t1':'x','t2':'o','t3':'o','t4':'o','t5':'x','t6':'x','t7':'o','t8':'x'}
+FLIP = lambda d, ks: {k: (('o' if v == 'x' else 'x') if k in ks else v) for k, v in d.items()}
 RIGHT3 = {'c1':'im','c2':'ex','c3':'im','c4':'ex','c5':'im','c6':'ex','c7':'im','c8':'ex','c9':'im','c10':'ex'}
 RIGHT4 = {'banana':('ph','im'),'salmon':('no','im'),'grape':('cl','im'),'ore':('au','im'),'oil':('sa','im'),'car':('us','ex'),'chip':('cn','ex')}
 
@@ -77,18 +78,18 @@ async def main():
 
             # ---------- 사건 1 ----------
             await stage(2)
-            plan2 = {'gaon': RIGHT2, 'narae': RIGHT2, 'daon': {'trade':'d1','export':'d3','import':'d2'}, 'raon': {'trade':'d4','export':'d2','import':'d3'}}
+            plan2 = {'gaon': RIGHT2, 'narae': RIGHT2, 'daon': FLIP(RIGHT2, ['t1', 't7']), 'raon': FLIP(RIGHT2, ['t5'])}
             for cid, ans in plan2.items():
-                for t, d in ans.items():
-                    await press(S[cid], f'[data-a=s2-term][data-v={t}]'); await press(S[cid], f'[data-a=s2-def][data-v={d}]')
+                for t, v in ans.items():
+                    await press(S[cid], f'[data-a=s2][data-i={t}][data-v={v}]')
                 await press(S[cid], '[data-a=submit]')
             await asyncio.sleep(0.6)
             sc = {c: await score(S[c]) for c in IDS}
-            check('사건 1 점수: 30·30·10·20', sc == {'gaon':30,'narae':30,'daon':10,'raon':20}, str(sc))
+            check('사건 1 점수: 40·40·30·35', sc == {'gaon':40,'narae':40,'daon':30,'raon':35}, str(sc))
             await S['daon'].screenshot(path=f'{SHOTS}/r2-case1-fix.png', full_page=True)
             for cid in ['daon', 'raon']:
-                for t, d in RIGHT2.items():
-                    await press(S[cid], f'[data-a=s2-term][data-v={t}]'); await press(S[cid], f'[data-a=s2-def][data-v={d}]')
+                for t, v in RIGHT2.items():
+                    await press(S[cid], f'[data-a=s2][data-i={t}][data-v={v}]')
                 await press(S[cid], '[data-a=submit]')
             await asyncio.sleep(0.6)
             solved = [await S[c].locator('.result.done').count() for c in IDS]
@@ -108,7 +109,7 @@ async def main():
                 await press(S[cid], '[data-a=submit]')
             await asyncio.sleep(0.6)
             sc3 = {c: await score(S[c]) for c in IDS}
-            check('사건 2 누적: 80·80·50·60', sc3 == {'gaon':80,'narae':80,'daon':50,'raon':60}, str(sc3))
+            check('사건 2 누적: 90·90·70·75', sc3 == {'gaon':90,'narae':90,'daon':70,'raon':75}, str(sc3))
             await S['raon'].screenshot(path=f'{SHOTS}/r3-case2.png', full_page=True)
 
             # ---------- 사건 3 ----------
@@ -125,7 +126,7 @@ async def main():
                 await press(pg, '[data-a=submit]')
             await asyncio.sleep(0.6)
             sc4 = {c: await score(S[c]) for c in IDS}
-            check('사건 3 누적: 150·145·115·130', sc4 == {'gaon':150,'narae':145,'daon':115,'raon':130}, str(sc4))
+            check('사건 3 누적: 160·155·135·145', sc4 == {'gaon':160,'narae':155,'daon':135,'raon':145}, str(sc4))
             await S['narae'].screenshot(path=f'{SHOTS}/r4-map-fix.png', full_page=True)
             await T.bring_to_front(); await T.screenshot(path=f'{SHOTS}/r4-teacher.png', full_page=True)
             rows = await T.locator('.mgrid tbody tr').all_inner_texts()
@@ -166,7 +167,7 @@ async def main():
             # 첫 답은 바꿀 수 없음: 사건 1 단계로 돌아가 다시 제출해도 점수 그대로
             await T.click('[data-a=view][data-v=teacher]'); await stage(2)
             pg = S['daon']; await pg.wait_for_selector('.case-head')
-            check('되돌아가도 처음 점수 유지', await score(pg) == 115)
+            check('되돌아가도 처음 점수 유지', await score(pg) == 135)
 
             D = await ctx.new_page(); watch(D, 'demo')
             await D.goto(BASE + '/demo.html'); await D.wait_for_selector('#views button')

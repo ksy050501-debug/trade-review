@@ -17,10 +17,10 @@
 
   const STAGES = [
     { n: 1, key: null, title: '탐정단 입장',           short: '입장',   min: 3 },
-    { n: 2, key: 's2', title: '사건 1 · 낱말 짝짓기',   short: '낱말',   min: 5 },
-    { n: 3, key: 's3', title: '사건 2 · 수출일까, 수입일까?', short: '분류', min: 10 },
+    { n: 2, key: 's2', title: '사건 1 · 진짜일까, 가짜일까?', short: '진짜?', min: 7 },
+    { n: 3, key: 's3', title: '사건 2 · 수출일까, 수입일까?', short: '분류', min: 9 },
     { n: 4, key: 's4', title: '사건 3 · 물건의 여행 지도', short: '지도', min: 10 },
-    { n: 5, key: 's5', title: '마지막 사건 · 이상한 사실', short: '궁금증', min: 8 },
+    { n: 5, key: 's5', title: '마지막 사건 · 이상한 사실', short: '궁금증', min: 7 },
     { n: 6, key: null, title: '수사 보고 · 질문 모으기', short: '마무리', min: 4 }
   ];
   const stageInfo = (n) => STAGES.find((s) => s.n === n) || STAGES[0];
@@ -28,20 +28,19 @@
   const nextStage = (n, dir) => { const i = STAGES.findIndex((s) => s.n === n) + dir; return i >= 0 && i < STAGES.length ? STAGES[i].n : null; };
   const stageOfKey = (k) => (STAGES.find((s) => s.key === k) || {}).n;
 
-  /* ---------- 사건 1: 낱말 짝짓기 (낱말마다 10점) ---------- */
+  /* ---------- 사건 1: 진짜일까, 가짜일까? (문장마다 5점) ----------
+   * 무역·수출·수입의 뜻을 실제 상황에 적용해야 풀 수 있는 O/X 문장 (진짜 4, 가짜 4) */
   const S2 = {
-    points: 10,
-    terms: [
-      { id: 'trade',  word: '무역' },
-      { id: 'export', word: '수출' },
-      { id: 'import', word: '수입' }
-    ],
-    defs: [
-      { id: 'd1', text: '나라와 나라 사이에 물건이나 서비스를 사고파는 것', answer: 'trade' },
-      { id: 'd2', text: '우리나라 물건을 다른 나라에 파는 것', answer: 'export' },
-      { id: 'd3', text: '다른 나라 물건을 우리나라로 사 오는 것', answer: 'import' },
-      { id: 'd4', text: '필요한 물건을 직접 만드는 것', answer: null },
-      { id: 'd5', text: '번 돈을 쓰지 않고 모아 두는 것', answer: null }
+    points: 5,
+    cards: [
+      { id: 't1', text: '무역은 나라와 나라 사이에 물건만 사고파는 것이다.', answer: 'x', why: '물건뿐 아니라 노래·영화·관광 같은 서비스도 사고팔아요.' },
+      { id: 't2', text: '우리나라 가수의 노래를 외국 사람들이 돈을 내고 듣는 것도 수출이다.', answer: 'o', why: '노래 같은 서비스를 다른 나라에 판 것이니 수출이에요.' },
+      { id: 't3', text: '외국 영화를 돈을 내고 들여와 우리나라 극장에서 보여 주는 것은 수입이다.', answer: 'o', why: '다른 나라의 서비스(영화)를 사 온 것이니 수입이에요.' },
+      { id: 't4', text: '우리나라가 수출을 하면 다른 나라에서 우리나라로 돈이 들어온다.', answer: 'o', why: '물건을 팔았으니 그 값을 받아요.' },
+      { id: 't5', text: '우리나라가 수입을 하면 다른 나라에서 우리나라로 돈이 들어온다.', answer: 'x', why: '물건을 사 왔으니 우리나라 돈이 다른 나라로 나가요.' },
+      { id: 't6', text: '한 나라는 수출만 하거나, 수입만 한다.', answer: 'x', why: '대부분의 나라는 수출도 하고 수입도 해요.' },
+      { id: 't7', text: '우리나라가 미국에 자동차를 수출하면, 미국 입장에서는 그 자동차를 수입한 것이다.', answer: 'o', why: '같은 거래도 파는 나라에는 수출, 사는 나라에는 수입이에요.' },
+      { id: 't8', text: '우리 동네 시장에서 우리나라 사람끼리 물건을 사고파는 것도 무역이다.', answer: 'x', why: '무역은 나라와 나라 사이의 거래예요. 한 나라 안의 거래는 무역이 아니에요.' }
     ]
   };
 
@@ -62,7 +61,9 @@
     ]
   };
 
-  /* ---------- 사건 3: 물건의 여행 지도 (나라 5점 + 방향 5점) ---------- */
+  /* ---------- 사건 3: 물건의 여행 지도 (나라 5점 + 방향 5점) ----------
+   * 실제로는 두 나라가 같은 물건을 서로 사고팔기도 하므로, 물건마다 '한 번의 배송 이야기'로
+   * 방향을 정해 둡니다. 나라는 지리 단서로, 방향은 이야기로 찾습니다. */
   const PLACES = [
     { id: 'kr', name: '대한민국',       lon: 127.5, lat: 36.5, home: true },
     { id: 'cn', name: '중국',           lon: 104,   lat: 34 },
@@ -76,13 +77,13 @@
   const S4 = {
     points: 5,
     items: [
-      { id: 'banana', icon: 'banana', name: '바나나',   hint: '덥고 비가 많이 오는 동남아시아의 섬나라', place: 'ph', dir: 'im' },
-      { id: 'salmon', icon: 'salmon', name: '연어',     hint: '춥고 깊은 바다가 있는 북유럽 나라',       place: 'no', dir: 'im' },
-      { id: 'grape',  icon: 'grape',  name: '포도',     hint: '남아메리카의 길쭉한 나라. 우리나라가 겨울일 때 그곳은 여름이에요', place: 'cl', dir: 'im' },
-      { id: 'ore',    icon: 'ore',    name: '철광석',   hint: '캥거루가 사는 남반구의 큰 나라',           place: 'au', dir: 'im' },
-      { id: 'oil',    icon: 'oil',    name: '원유',     hint: '사막이 넓은 중동의 나라',                  place: 'sa', dir: 'im' },
-      { id: 'car',    icon: 'car',    name: '자동차',   hint: '북아메리카의 넓은 나라. 우리나라 자동차를 많이 사 가요', place: 'us', dir: 'ex' },
-      { id: 'chip',   icon: 'chip',   name: '반도체',   hint: '우리나라 서쪽 바로 옆, 사람이 아주 많은 나라', place: 'cn', dir: 'ex' }
+      { id: 'banana', icon: 'banana', name: '바나나',   hint: '덥고 비가 많이 오는 동남아시아 섬나라의 농장에서 딴 바나나가 배를 타고 우리나라 마트에 도착했어요.', place: 'ph', dir: 'im' },
+      { id: 'salmon', icon: 'salmon', name: '연어',     hint: '춥고 깊은 바다가 있는 북유럽 나라에서 기른 연어가 비행기를 타고 우리나라 식당에 왔어요.', place: 'no', dir: 'im' },
+      { id: 'grape',  icon: 'grape',  name: '포도',     hint: '남아메리카의 길쭉한 나라에서 여름에 딴 포도가, 한겨울인 우리나라 과일 가게에 도착했어요.', place: 'cl', dir: 'im' },
+      { id: 'ore',    icon: 'ore',    name: '철광석',   hint: '캥거루가 사는 남반구의 큰 나라에서 캔 철광석이 배에 실려 우리나라 제철소로 왔어요.', place: 'au', dir: 'im' },
+      { id: 'oil',    icon: 'oil',    name: '원유',     hint: '사막이 넓은 중동 나라에서 뽑은 원유가 커다란 배에 실려 우리나라 항구에 들어왔어요.', place: 'sa', dir: 'im' },
+      { id: 'car',    icon: 'car',    name: '자동차',   hint: '우리나라 공장에서 만든 자동차가 배에 실려 북아메리카의 넓은 나라로 떠났어요.', place: 'us', dir: 'ex' },
+      { id: 'chip',   icon: 'chip',   name: '반도체',   hint: '우리나라 공장에서 만든 반도체가 서쪽 바로 옆, 사람이 아주 많은 나라의 전자제품 공장으로 보내졌어요.', place: 'cn', dir: 'ex' }
     ]
   };
 
@@ -100,7 +101,7 @@
   /* ---------- 모둠마다 다른 카드 순서 (새로고침해도 같은 순서) ----------
    * 정답이 줄·순서 규칙으로 드러나지 않게 섞습니다.
    * - 사건 2: 2열 화면에서 한 줄이 한 가지 답으로만 채워지지 않고, 같은 답이 3장 넘게 이어지지 않음
-   * - 사건 1: 뜻 카드가 낱말 순서(무역·수출·수입)대로 놓이지 않고, 함정 카드가 끝에 몰리지 않음 */
+   * - 사건 1: 같은 규칙으로 진짜·가짜 문장을 섞음 */
   function seeded(str) {
     let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -108,19 +109,15 @@
   function shuffled(arr, rnd) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function cardsOk(order) {
     const ans = order.map((c) => c.answer);
+    const kinds = Array.from(new Set(ans));
     const col = (k) => ans.filter((_, i) => i % 2 === k);
-    const minor = (c) => Math.min(c.filter((x) => x === 'ex').length, c.filter((x) => x === 'im').length);
-    if (minor(col(0)) < 2 || minor(col(1)) < 2) return false;                   // 한 줄에 수출·수입이 2장 이상씩
+    const need = ans.length >= 10 ? 2 : 1;
+    const minor = (c) => Math.min(...kinds.map((k) => c.filter((x) => x === k).length));
+    if (minor(col(0)) < need || minor(col(1)) < need) return false;                   // 한 줄에 수출·수입이 2장 이상씩
     let run = 1; for (let i = 1; i < ans.length; i++) { run = ans[i] === ans[i - 1] ? run + 1 : 1; if (run > 3) return false; }
     if (ans.every((a, i) => i === 0 || a !== ans[i - 1])) return false;          // 완전히 번갈아 나옴
     for (let i = 0; i + 1 < ans.length; i += 2) if (ans[i] === ans[i + 1]) return true; // 같은 행에 같은 답이 하나는 있게
     return false;
-  }
-  function defsOk(order) {
-    const ids = order.map((d) => d.id);
-    if (ids.slice(0, 3).join() === 'd1,d2,d3') return false;
-    if (ids.slice(-2).sort().join() === 'd4,d5') return false;
-    return true;
   }
   function orderFor(list, seed, ok) {
     const rnd = seeded(seed);
@@ -128,9 +125,9 @@
     return list.slice();
   }
   const cardOrder = (cid) => orderFor(S3.cards, 'cards:' + cid, cardsOk);
-  const defOrder = (cid) => orderFor(S2.defs, 'defs:' + cid, defsOk);
+  const stmtOrder = (cid) => orderFor(S2.cards, 'stmts:' + cid, cardsOk);
 
-  const MAX_SCORE = S2.terms.length * S2.points + S3.cards.length * S3.points + S4.items.length * S4.points * 2;
+  const MAX_SCORE = S2.cards.length * S2.points + S3.cards.length * S3.points + S4.items.length * S4.points * 2;
 
   /* ---------- 상태 ---------- */
   const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -150,7 +147,7 @@
   function check(key, a) {
     a = a || {};
     const out = {};
-    if (key === 's2') S2.terms.forEach((t) => { const d = S2.defs.find((x) => x.id === a[t.id]); out[t.id] = !!d && d.answer === t.id; });
+    if (key === 's2') S2.cards.forEach((c) => { out[c.id] = a[c.id] === c.answer; });
     if (key === 's3') S3.cards.forEach((c) => { out[c.id] = a[c.id] === c.answer; });
     if (key === 's4') S4.items.forEach((it) => { const v = a[it.id] || {}; out[it.id] = { place: v.place === it.place, dir: v.dir === it.dir }; });
     return out;
@@ -162,7 +159,7 @@
     if (key === 's4') return Object.values(r).reduce((s, v) => s + (v.place ? S4.points : 0) + (v.dir ? S4.points : 0), 0);
     return 0;
   }
-  const stageMax = (key) => key === 's2' ? S2.terms.length * S2.points : key === 's3' ? S3.cards.length * S3.points : key === 's4' ? S4.items.length * S4.points * 2 : 0;
+  const stageMax = (key) => key === 's2' ? S2.cards.length * S2.points : key === 's3' ? S3.cards.length * S3.points : key === 's4' ? S4.items.length * S4.points * 2 : 0;
   // 점수는 '처음 제출한 답'으로만 매김. 고쳐서 다시 낸 답은 사건 해결 여부에만 쓰임
   function score(s, cid) {
     const c = s.countries[cid] || freshCountry();
@@ -192,8 +189,7 @@
   /* ---------- 제출 ---------- */
   function validAnswer(key, a) {
     if (!a || typeof a !== 'object') return false;
-    if (key === 's2') return Object.keys(a).every((k) => S2.terms.some((t) => t.id === k) && S2.defs.some((d) => d.id === a[k]))
-      && S2.terms.every((t) => a[t.id]);
+    if (key === 's2') return S2.cards.every((c) => a[c.id] === 'o' || a[c.id] === 'x') && Object.keys(a).length === S2.cards.length;
     if (key === 's3') return S3.cards.every((c) => a[c.id] === 'ex' || a[c.id] === 'im') && Object.keys(a).length === S3.cards.length;
     if (key === 's4') return S4.items.every((it) => a[it.id] && PLACES.some((p) => p.id === a[it.id].place && !p.home) && (a[it.id].dir === 'ex' || a[it.id].dir === 'im'))
       && Object.keys(a).length === S4.items.length;
@@ -204,7 +200,7 @@
     if (!st || key === 's5') return fail('제출할 수 없는 사건이에요.');
     if (s.stage !== st) return fail('지금은 이 사건을 푸는 시간이 아니에요.');
     const c = s.countries[cid]; if (!c) return fail('나라를 찾을 수 없어요.');
-    if (!validAnswer(key, a)) return fail(key === 's2' ? '세 낱말의 뜻을 모두 골라 주세요.' : key === 's3' ? '카드 10장을 모두 수출이나 수입으로 골라 주세요.' : '물건마다 나라와 방향(수출·수입)을 모두 골라 주세요.');
+    if (!validAnswer(key, a)) return fail(key === 's2' ? '문장 8개를 모두 진짜나 가짜로 골라 주세요.' : key === 's3' ? '카드 10장을 모두 수출이나 수입으로 골라 주세요.' : '물건마다 나라와 방향(수출·수입)을 모두 골라 주세요.');
     c.ans = c.ans || {}; c.first = c.first || {};
     const firstTime = !c.first[key];
     if (firstTime) c.first[key] = clone(a);
@@ -228,7 +224,7 @@
 
   root.TradeLogic = {
     DEFAULT_CONFIG, COUNTRIES, STAGES, S2, S3, S4, S5, PLACES, MAX_SCORE,
-    cardOrder, defOrder, cardsOk, defsOk, stageInfo, stageNo, nextStage, stageOfKey, clone, countryById, placeById, freshCountry, createState,
+    cardOrder, stmtOrder, cardsOk, stageInfo, stageNo, nextStage, stageOfKey, clone, countryById, placeById, freshCountry, createState,
     check, stagePoints, stageMax, score, allCorrect, status, ranking, validAnswer, submit, submitCurious, setStage
   };
   if (typeof module !== 'undefined') module.exports = root.TradeLogic;

@@ -438,3 +438,6 @@ button.fact{cursor:pointer}
 .bbar i{display:block;height:100%;background:var(--nc);border-radius:11px;transition:width .4s ease-out}
 .bpts{font-size:26px;text-align:right}
 @media (max-width:640px){.brow{grid-template-columns:28px auto 1fr 48px}.brow .bbar,.brow .st{display:none}}
+.ch.o.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ch.x.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.stmt{font-size:17px!important;line-height:1.5}
