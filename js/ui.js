@@ -126,7 +126,7 @@ function case1(cid){
   const key='s2',d=draft(cid,key),c=cst(cid);const sub=c.first&&c.first[key];const chk=sub?L.check(key,c.ans[key]):null;
   const solved=L.status(S,cid,key)==='done';const n=L.S2.cards.filter(x=>d[x.id]).length;
   return `<section class="panel">${resultBanner(cid,key)}
-   <div class="ccards">${L.stmtOrder(cid).map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
+   <div class="ccards">${L.stmtOrder().map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
      return `<div class="ccard${mark?' '+mark:''}"><div class="ctop"><span class="num cno">${i+1}</span><p class="stmt">${esc(x.text)}</p>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</div>
        <div class="choice"><button class="ch o${v==='o'?' on':''}" data-a="s2" data-c="${cid}" data-i="${x.id}" data-v="o" ${solved?'disabled':''} aria-pressed="${v==='o'}">진짜 (O)</button><button class="ch x${v==='x'?' on':''}" data-a="s2" data-c="${cid}" data-i="${x.id}" data-v="x" ${solved?'disabled':''} aria-pressed="${v==='x'}">가짜 (X)</button></div></div>`}).join('')}</div>
    ${solved?'':submitBar(cid,key,n===L.S2.cards.length,!sub,`<span class="num">${n}/${L.S2.cards.length}</span>개 골랐어요`)}</section>`;
@@ -136,7 +136,7 @@ function case2(cid){
   const key='s3',d=draft(cid,key),c=cst(cid);const sub=c.first&&c.first[key];const chk=sub?L.check(key,c.ans[key]):null;
   const solved=L.status(S,cid,key)==='done';const n=L.S3.cards.filter(x=>d[x.id]).length;
   return `<section class="panel">${resultBanner(cid,key)}
-   <div class="ccards">${L.cardOrder(cid).map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
+   <div class="ccards">${L.cardOrder().map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
      return `<div class="ccard${mark?' '+mark:''}"><div class="ctop"><span class="num cno">${i+1}</span>${icon(x.icon,44)}<p>${esc(x.text)}</p>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</div>
        <div class="choice"><button class="ch ex${v==='ex'?' on':''}" data-a="s3" data-c="${cid}" data-i="${x.id}" data-v="ex" ${solved?'disabled':''} aria-pressed="${v==='ex'}">수출</button><button class="ch im${v==='im'?' on':''}" data-a="s3" data-c="${cid}" data-i="${x.id}" data-v="im" ${solved?'disabled':''} aria-pressed="${v==='im'}">수입</button></div></div>`}).join('')}</div>
    ${solved?'':submitBar(cid,key,n===L.S3.cards.length,!sub,`<span class="num">${n}/${L.S3.cards.length}</span>장 골랐어요`)}</section>`;
@@ -225,11 +225,11 @@ function teacherView(){
   return `${opts.teacherExtra?opts.teacherExtra():''}<section class="panel"><h2>수업 단계</h2>${stages}
     <div class="row" style="margin-top:12px"><button class="btn ghost small" data-a="stage" data-n="${L.nextStage(S.stage,-1)}" ${L.nextStage(S.stage,-1)?'':'disabled'}>◀ 이전 단계</button><button class="btn accent small" data-a="stage" data-n="${L.nextStage(S.stage,1)}" ${L.nextStage(S.stage,1)?'':'disabled'}>다음 단계 ▶</button></div>
     <div class="callout" style="margin-top:12px"><b>${esc(g[0])}</b> · ${esc(g[1])}</div></section>
-   <section class="panel"><h2>모둠별 점수와 진행</h2>${scoreTable()}<p class="muted" style="margin:8px 0 0;font-size:13px">점수는 처음 제출한 답으로 매깁니다. '고치는 중'은 제출했지만 아직 틀린 곳이 있는 모둠이에요.</p></section>
+   <section class="panel"><h2>모둠별 점수와 진행</h2>${scoreTable()}<p class="muted" style="margin:8px 0 0;font-size:13px">문제 번호는 모든 모둠이 같습니다. 점수는 처음 제출한 답으로 매깁니다. '고치는 중'은 제출했지만 아직 틀린 곳이 있는 모둠이에요.</p></section>
    ${S.stage>=5?`<section class="panel"><h2>모둠의 추측과 질문</h2>${curiousList()}</section>`:''}
    <section class="panel"><details><summary><h2 style="font-size:19px;display:inline">정답 보기 (교사용)</h2></summary><div class="grid2" style="margin-top:12px">
-     <div><h3>사건 1</h3><ul class="anslist">${L.S2.cards.map(x=>`<li>${esc(x.text)} → <b>${x.answer==='o'?'진짜':'가짜'}</b><br><span class="muted">${esc(x.why)}</span></li>`).join('')}</ul>
-       <h3>사건 2</h3><ul class="anslist">${L.S3.cards.map((x,i)=>`<li>${i+1}. ${esc(x.text)} → <b>${x.answer==='ex'?'수출':'수입'}</b></li>`).join('')}</ul></div>
+     <div><h3>사건 1</h3><ul class="anslist">${L.stmtOrder().map((x,i)=>`<li><b class="num">${i+1}.</b> ${esc(x.text)} → <b>${x.answer==='o'?'진짜':'가짜'}</b><br><span class="muted">${esc(x.why)}</span></li>`).join('')}</ul>
+       <h3>사건 2</h3><ul class="anslist">${L.cardOrder().map((x,i)=>`<li><b class="num">${i+1}.</b> ${esc(x.text)} → <b>${x.answer==='ex'?'수출':'수입'}</b></li>`).join('')}</ul></div>
      <div><h3>사건 3</h3><ul class="anslist">${L.S4.items.map(x=>`<li><b>${esc(x.name)}</b>: ${esc(L.placeById(x.place).name)} · ${x.dir==='ex'?'수출':'수입'}</li>`).join('')}</ul></div></div></details></section>
    ${demoTail}`;
 }

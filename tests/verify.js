@@ -46,8 +46,8 @@ check('궁금증 단계는 점수에 영향 없음', L.score(s, 'gaon').total ==
 check('200자 넘으면 제출 불가', !L.submitCurious(s, 'daon', { card: 'f1', guess: 'ㄱ'.repeat(201) }).ok);
 const ids4 = L.COUNTRIES.map((c) => c.id);
 check('사건 2 카드 순서: 모든 모둠에서 정답 규칙이 안 보임 (각 줄 수출·수입 2장 이상, 3장 넘게 연속 없음)', ids4.every((id) => L.cardsOk(L.cardOrder(id))));
-check('사건 2 카드 순서: 모둠마다 다름', new Set(ids4.map((id) => L.cardOrder(id).map((c) => c.id).join())).size === 4);
-check('사건 1 문장 순서: 모둠마다 섞이고 각 줄에 진짜·가짜가 섞임', ids4.every((id) => L.cardsOk(L.stmtOrder(id))) && new Set(ids4.map((id) => L.stmtOrder(id).map((c) => c.id).join())).size === 4);
+check('사건 2 카드 순서: 모든 모둠이 같음', new Set(ids4.map((id) => L.cardOrder(id).map((c) => c.id).join())).size === 1);
+check('사건 1 문장 순서: 모든 모둠이 같고, 각 줄에 진짜·가짜가 섞임', L.cardsOk(L.stmtOrder()) && new Set(ids4.map((id) => L.stmtOrder(id).map((c) => c.id).join())).size === 1);
 check('사건 3: 이야기에 방향이 드러남 (수입은 "우리나라 …에 도착/왔/들어왔", 수출은 "우리나라 공장에서 만든 … 떠났/보내졌")', L.S4.items.every((i) => i.dir === 'ex' ? /우리나라 공장에서 만든/.test(i.hint) && /(떠났|보내졌)/.test(i.hint) : /우리나라/.test(i.hint) && /(도착|왔어요|들어왔)/.test(i.hint)));
 check('카드 순서는 새로고침해도 같음', L.cardOrder('gaon').map((c) => c.id).join() === L.cardOrder('gaon').map((c) => c.id).join());
 { const s9 = L.createState(cfg); L.setStage(s9, cfg, 2);

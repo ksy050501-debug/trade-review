@@ -98,7 +98,8 @@
   };
 
 
-  /* ---------- 모둠마다 다른 카드 순서 (새로고침해도 같은 순서) ----------
+  /* ---------- 카드 순서 (모든 모둠이 같은 순서, 새로고침해도 같음) ----------
+   * 교사가 "1번 문제"라고 부르면 모든 모둠이 같은 카드를 보도록 순서를 하나로 고정합니다.
    * 정답이 줄·순서 규칙으로 드러나지 않게 섞습니다.
    * - 사건 2: 2열 화면에서 한 줄이 한 가지 답으로만 채워지지 않고, 같은 답이 3장 넘게 이어지지 않음
    * - 사건 1: 같은 규칙으로 진짜·가짜 문장을 섞음 */
@@ -113,7 +114,9 @@
     const col = (k) => ans.filter((_, i) => i % 2 === k);
     const need = ans.length >= 10 ? 2 : 1;
     const minor = (c) => Math.min(...kinds.map((k) => c.filter((x) => x === k).length));
-    if (minor(col(0)) < need || minor(col(1)) < need) return false;                   // 한 줄에 수출·수입이 2장 이상씩
+    if (minor(col(0)) < need || minor(col(1)) < need) return false;
+    const alt = (c) => c.every((x, i) => i === 0 || x !== c[i - 1]);
+    if (alt(col(0)) || alt(col(1))) return false;                                // 한 줄 안에서 번갈아 나옴                   // 한 줄에 수출·수입이 2장 이상씩
     let run = 1; for (let i = 1; i < ans.length; i++) { run = ans[i] === ans[i - 1] ? run + 1 : 1; if (run > 3) return false; }
     if (ans.every((a, i) => i === 0 || a !== ans[i - 1])) return false;          // 완전히 번갈아 나옴
     for (let i = 0; i + 1 < ans.length; i += 2) if (ans[i] === ans[i + 1]) return true; // 같은 행에 같은 답이 하나는 있게
@@ -124,8 +127,8 @@
     for (let i = 0; i < 200; i++) { const o = shuffled(list, rnd); if (ok(o)) return o; }
     return list.slice();
   }
-  const cardOrder = (cid) => orderFor(S3.cards, 'cards:' + cid, cardsOk);
-  const stmtOrder = (cid) => orderFor(S2.cards, 'stmts:' + cid, cardsOk);
+  const cardOrder = () => orderFor(S3.cards, 'cards:all', cardsOk);
+  const stmtOrder = () => orderFor(S2.cards, 'stmts:all', cardsOk);
 
   const MAX_SCORE = S2.cards.length * S2.points + S3.cards.length * S3.points + S4.items.length * S4.points * 2;
 
