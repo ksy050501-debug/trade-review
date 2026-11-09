@@ -130,8 +130,7 @@ function case1(cid){
    <div class="label" style="margin-bottom:8px">① 낱말을 누르고 ② 알맞은 뜻 카드를 누르세요</div>
    <div class="terms">${L.S2.terms.map(t=>{const df=L.S2.defs.find(x=>x.id===d[t.id]);const mark=chk&&sub&&L.clone(c.ans[key])[t.id]===d[t.id]?(chk[t.id]?'ok':'no'):'';
      return `<button class="term${act===t.id?' on':''}${mark?' '+mark:''}" data-a="s2-term" data-c="${cid}" data-v="${t.id}" ${solved?'disabled':''}><b>${esc(t.word)}</b><span>${df?esc(df.text):'뜻을 골라 주세요'}</span>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</button>`}).join('')}</div>
-   <div class="defs">${L.S2.defs.map(df=>{const t=termOf(df.id);return `<button class="def${t?' used':''}" data-a="s2-def" data-c="${cid}" data-v="${df.id}" ${solved?'disabled':''}>${t?`<span class="tagw">${esc(t.word)}</span>`:''}${esc(df.text)}</button>`}).join('')}</div>
-   <p class="muted" style="margin:10px 0 0;font-size:14px">뜻 카드 중 2장은 어느 낱말과도 짝이 아니에요.</p>
+   <div class="defs">${L.defOrder(cid).map(df=>{const t=termOf(df.id);return `<button class="def${t?' used':''}" data-a="s2-def" data-c="${cid}" data-v="${df.id}" ${solved?'disabled':''}>${t?`<span class="tagw">${esc(t.word)}</span>`:''}${esc(df.text)}</button>`}).join('')}</div>
    ${solved?'':submitBar(cid,key,L.S2.terms.every(t=>d[t.id]),!sub,'')}</section>`;
 }
 // 사건 2: 수출일까, 수입일까?
@@ -139,7 +138,7 @@ function case2(cid){
   const key='s3',d=draft(cid,key),c=cst(cid);const sub=c.first&&c.first[key];const chk=sub?L.check(key,c.ans[key]):null;
   const solved=L.status(S,cid,key)==='done';const n=L.S3.cards.filter(x=>d[x.id]).length;
   return `<section class="panel">${resultBanner(cid,key)}
-   <div class="ccards">${L.S3.cards.map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
+   <div class="ccards">${L.cardOrder(cid).map((x,i)=>{const v=d[x.id];const mark=chk&&c.ans[key][x.id]===v?(chk[x.id]?'ok':'no'):'';
      return `<div class="ccard${mark?' '+mark:''}"><div class="ctop"><span class="num cno">${i+1}</span>${icon(x.icon,44)}<p>${esc(x.text)}</p>${mark==='ok'?'<i class="mk">✓</i>':mark==='no'?'<i class="mk">✗</i>':''}</div>
        <div class="choice"><button class="ch ex${v==='ex'?' on':''}" data-a="s3" data-c="${cid}" data-i="${x.id}" data-v="ex" ${solved?'disabled':''} aria-pressed="${v==='ex'}">수출</button><button class="ch im${v==='im'?' on':''}" data-a="s3" data-c="${cid}" data-i="${x.id}" data-v="im" ${solved?'disabled':''} aria-pressed="${v==='im'}">수입</button></div></div>`}).join('')}</div>
    ${solved?'':submitBar(cid,key,n===L.S3.cards.length,!sub,`<span class="num">${n}/${L.S3.cards.length}</span>장 골랐어요`)}</section>`;
@@ -270,7 +269,7 @@ function helperHint(){
   if(st===1)return '탐정단 약속을 함께 읽어요. 선생님이 사건 1을 열면 시작해요.';
   if(st===6)return '오늘 남긴 질문을 기억해 두세요. 내일 국왕이 되어 직접 실험해 보면 답을 찾을 수 있어요!';
   if(stt==='done')return st===5?'모둠 생각을 보냈어요. 다른 카드에 대해서도 이야기해 봐요.':'사건 해결! 다음 사건이 열릴 때까지 다른 모둠 차례를 기다려요.';
-  if(st===2)return stt==='fix'?'✗ 표시가 있는 낱말을 다시 눌러 다른 뜻을 골라 보세요. "수출"은 내보내는 것, "수입"은 들여오는 것이에요.':'먼저 위의 낱말(무역·수출·수입)을 누르고, 아래에서 알맞은 뜻 카드를 눌러요. 둘은 함정 카드예요!';
+  if(st===2)return stt==='fix'?'✗ 표시가 있는 낱말을 다시 눌러 다른 뜻을 골라 보세요. "수출"은 내보내는 것, "수입"은 들여오는 것이에요.':'먼저 위의 낱말(무역·수출·수입)을 누르고, 아래에서 알맞은 뜻 카드를 눌러요.';
   if(st===3)return stt==='fix'?'✗ 카드를 다시 읽어 보세요. 우리나라에서 나가면 수출, 우리나라로 들어오면 수입이에요.':'"우리나라 입장에서" 생각해요. 물건이 우리나라에서 나가나요, 들어오나요?';
   if(st===4){const d=draft(cid,'s4');const it=L.S4.items.find(x=>!(d[x.id]&&d[x.id].place&&d[x.id].dir));
     if(stt==='fix')return '✗ 물건을 눌러 힌트를 다시 읽고, 나라나 방향을 고쳐 보세요.';

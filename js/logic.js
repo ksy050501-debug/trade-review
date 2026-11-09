@@ -96,6 +96,40 @@
     maxLen: 200
   };
 
+
+  /* ---------- 모둠마다 다른 카드 순서 (새로고침해도 같은 순서) ----------
+   * 정답이 줄·순서 규칙으로 드러나지 않게 섞습니다.
+   * - 사건 2: 2열 화면에서 한 줄이 한 가지 답으로만 채워지지 않고, 같은 답이 3장 넘게 이어지지 않음
+   * - 사건 1: 뜻 카드가 낱말 순서(무역·수출·수입)대로 놓이지 않고, 함정 카드가 끝에 몰리지 않음 */
+  function seeded(str) {
+    let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function shuffled(arr, rnd) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function cardsOk(order) {
+    const ans = order.map((c) => c.answer);
+    const col = (k) => ans.filter((_, i) => i % 2 === k);
+    const minor = (c) => Math.min(c.filter((x) => x === 'ex').length, c.filter((x) => x === 'im').length);
+    if (minor(col(0)) < 2 || minor(col(1)) < 2) return false;                   // 한 줄에 수출·수입이 2장 이상씩
+    let run = 1; for (let i = 1; i < ans.length; i++) { run = ans[i] === ans[i - 1] ? run + 1 : 1; if (run > 3) return false; }
+    if (ans.every((a, i) => i === 0 || a !== ans[i - 1])) return false;          // 완전히 번갈아 나옴
+    for (let i = 0; i + 1 < ans.length; i += 2) if (ans[i] === ans[i + 1]) return true; // 같은 행에 같은 답이 하나는 있게
+    return false;
+  }
+  function defsOk(order) {
+    const ids = order.map((d) => d.id);
+    if (ids.slice(0, 3).join() === 'd1,d2,d3') return false;
+    if (ids.slice(-2).sort().join() === 'd4,d5') return false;
+    return true;
+  }
+  function orderFor(list, seed, ok) {
+    const rnd = seeded(seed);
+    for (let i = 0; i < 200; i++) { const o = shuffled(list, rnd); if (ok(o)) return o; }
+    return list.slice();
+  }
+  const cardOrder = (cid) => orderFor(S3.cards, 'cards:' + cid, cardsOk);
+  const defOrder = (cid) => orderFor(S2.defs, 'defs:' + cid, defsOk);
+
   const MAX_SCORE = S2.terms.length * S2.points + S3.cards.length * S3.points + S4.items.length * S4.points * 2;
 
   /* ---------- 상태 ---------- */
@@ -194,7 +228,7 @@
 
   root.TradeLogic = {
     DEFAULT_CONFIG, COUNTRIES, STAGES, S2, S3, S4, S5, PLACES, MAX_SCORE,
-    stageInfo, stageNo, nextStage, stageOfKey, clone, countryById, placeById, freshCountry, createState,
+    cardOrder, defOrder, cardsOk, defsOk, stageInfo, stageNo, nextStage, stageOfKey, clone, countryById, placeById, freshCountry, createState,
     check, stagePoints, stageMax, score, allCorrect, status, ranking, validAnswer, submit, submitCurious, setStage
   };
   if (typeof module !== 'undefined') module.exports = root.TradeLogic;

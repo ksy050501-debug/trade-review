@@ -41,5 +41,10 @@ check('추측 없이 궁금증 제출 불가', !L.submitCurious(s, 'gaon', { car
 check('궁금증 제출', L.submitCurious(s, 'gaon', { card: 'f2', guess: '외국 차가 더 좋아서?', question: '왜 둘 다 할까?' }).ok && L.status(s, 'gaon', 's5') === 'done');
 check('궁금증 단계는 점수에 영향 없음', L.score(s, 'gaon').total === 110);
 check('200자 넘으면 제출 불가', !L.submitCurious(s, 'daon', { card: 'f1', guess: 'ㄱ'.repeat(201) }).ok);
+const ids4 = L.COUNTRIES.map((c) => c.id);
+check('사건 2 카드 순서: 모든 모둠에서 정답 규칙이 안 보임 (각 줄 수출·수입 2장 이상, 3장 넘게 연속 없음)', ids4.every((id) => L.cardsOk(L.cardOrder(id))));
+check('사건 2 카드 순서: 모둠마다 다름', new Set(ids4.map((id) => L.cardOrder(id).map((c) => c.id).join())).size === 4);
+check('사건 1 뜻 카드: 낱말 순서대로 놓이지 않고 함정 카드가 끝에 몰리지 않음', ids4.every((id) => L.defsOk(L.defOrder(id))));
+check('카드 순서는 새로고침해도 같음', L.cardOrder('gaon').map((c) => c.id).join() === L.cardOrder('gaon').map((c) => c.id).join());
 out.push(`\n결과: ${fails ? fails + '개 실패' : '모든 검증 통과'}`);
 console.log(out.join('\n')); process.exit(fails ? 1 : 0);
