@@ -69,7 +69,8 @@ function draft(cid,key){
   if(!ui.drafts[k]){
     let d=null;try{d=JSON.parse(store.get(draftKey(cid,key)))}catch(e){}
     const saved=cst(cid).ans&&cst(cid).ans[key];
-    ui.drafts[k]=d||(saved?L.clone(saved):(key==='s5'?L.clone(cst(cid).curious||{}):{}));
+    const base=d||(saved?L.clone(saved):(key==='s5'?L.clone(cst(cid).curious||{}):{}));
+    ui.drafts[k]=key==='s5'?base:L.cleanAnswer(key,base);
   }
   return ui.drafts[k];
 }
@@ -317,7 +318,7 @@ function onClick(e){
     d[act]=Object.assign({},d[act],a==='s4-place'?{place:b.dataset.v}:{dir:b.dataset.v});saveDraft(cid,'s4');
     if(d[act].place&&d[act].dir){const nx=L.S4.items.find(it=>!(d[it.id]&&d[it.id].place&&d[it.id].dir));if(nx)ui.active[cid+'.s4']=nx.id}
     return render(true)}
-  if(a==='submit'){const key=b.dataset.k;const d=L.clone(draft(cid,key));
+  if(a==='submit'){const key=b.dataset.k;const d=L.cleanAnswer(key,draft(cid,key));
     return run('sub-'+cid,()=>B.submit(cid,key,d),(r)=>r.firstTime?(r.allCorrect?`모두 맞았어요! +${r.points}점`:`+${r.points}점! 틀린 곳을 고쳐서 다시 제출해 보세요.`):(r.allCorrect?'사건 해결!':'아직 틀린 곳이 있어요.'))}
   if(a==='s5-card'){const d=draft(cid,'s5');d.card=b.dataset.v;saveDraft(cid,'s5');return render(true)}
   if(a==='s5-send'){const d=draft(cid,'s5');return run('sub-'+cid,()=>B.curious(cid,{card:d.card,guess:d.guess||'',question:d.question||''}),'모둠 생각을 보냈어요!')}

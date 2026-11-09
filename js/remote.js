@@ -20,7 +20,8 @@ const ms = (t) => (t && typeof t.toMillis === 'function') ? t.toMillis() : (type
 
 export const ONLINE_WINDOW = 75 * 1000;
 export const HEARTBEAT = 25 * 1000;
-export const ROOM_VERSION = 1;
+// 문제가 바뀌어 예전 방의 답과 맞지 않게 되면 올립니다. (2: 사건 1을 진짜·가짜 문장으로 바꿈)
+export const ROOM_VERSION = 2;
 export function roomUsable(r) {
   return !!r && r.ver === ROOM_VERSION && L.STAGES.some((s) => s.n === r.stage);
 }
@@ -160,8 +161,9 @@ export function createRemoteBackend({ fs, db, code, uid, onChange, watchSeats })
         const s = { stage: r0.stage, countries: { [cid]: cdata(cs) } };
         const r = L.submit(s, cid, key, answers);
         if (!r.ok) return r;
-        const upd = { ['ans.' + key]: clean(answers), op: { kind: 'submit', key } };
-        if (r.firstTime) upd['first.' + key] = clean(answers);
+        const a = L.cleanAnswer(key, answers);
+        const upd = { ['ans.' + key]: a, op: { kind: 'submit', key } };
+        if (r.firstTime) upd['first.' + key] = a;
         t.update(R.country(cid), upd);
         return r;
       });

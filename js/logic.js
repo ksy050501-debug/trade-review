@@ -195,11 +195,21 @@
       && Object.keys(a).length === S4.items.length;
     return false;
   }
+
+  // 지금 문제에 있는 칸만 남김 (예전 버전 답이나 잘못된 값이 섞여도 무시)
+  function cleanAnswer(key, a) {
+    a = a || {}; const out = {};
+    if (key === 's2') S2.cards.forEach((c) => { if (a[c.id] === 'o' || a[c.id] === 'x') out[c.id] = a[c.id]; });
+    if (key === 's3') S3.cards.forEach((c) => { if (a[c.id] === 'ex' || a[c.id] === 'im') out[c.id] = a[c.id]; });
+    if (key === 's4') S4.items.forEach((it) => { const v = a[it.id]; if (v && typeof v === 'object') { const o = {}; if (PLACES.some((p) => p.id === v.place && !p.home)) o.place = v.place; if (v.dir === 'ex' || v.dir === 'im') o.dir = v.dir; out[it.id] = o; } });
+    return out;
+  }
   function submit(s, cid, key, a) {
     const st = stageOfKey(key);
     if (!st || key === 's5') return fail('제출할 수 없는 사건이에요.');
     if (s.stage !== st) return fail('지금은 이 사건을 푸는 시간이 아니에요.');
     const c = s.countries[cid]; if (!c) return fail('나라를 찾을 수 없어요.');
+    a = cleanAnswer(key, a);
     if (!validAnswer(key, a)) return fail(key === 's2' ? '문장 8개를 모두 진짜나 가짜로 골라 주세요.' : key === 's3' ? '카드 10장을 모두 수출이나 수입으로 골라 주세요.' : '물건마다 나라와 방향(수출·수입)을 모두 골라 주세요.');
     c.ans = c.ans || {}; c.first = c.first || {};
     const firstTime = !c.first[key];
@@ -225,7 +235,7 @@
   root.TradeLogic = {
     DEFAULT_CONFIG, COUNTRIES, STAGES, S2, S3, S4, S5, PLACES, MAX_SCORE,
     cardOrder, stmtOrder, cardsOk, stageInfo, stageNo, nextStage, stageOfKey, clone, countryById, placeById, freshCountry, createState,
-    check, stagePoints, stageMax, score, allCorrect, status, ranking, validAnswer, submit, submitCurious, setStage
+    check, cleanAnswer, stagePoints, stageMax, score, allCorrect, status, ranking, validAnswer, submit, submitCurious, setStage
   };
   if (typeof module !== 'undefined') module.exports = root.TradeLogic;
 })(typeof window !== 'undefined' ? window : globalThis);
