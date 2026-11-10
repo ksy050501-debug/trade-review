@@ -9,10 +9,10 @@
   'use strict';
 
   const COUNTRIES = [
-    { id: 'gaon',  name: '가온국', color: '#2f6fdb', flag: 'stripes' },
-    { id: 'narae', name: '나래국', color: '#d9622b', flag: 'circle' },
-    { id: 'daon',  name: '다온국', color: '#13917f', flag: 'cross' },
-    { id: 'raon',  name: '라온국', color: '#8e44b8', flag: 'diagonal' }
+    { id: 'gaon',  name: '가온국', color: '#d93a3a', flag: 'solid' },
+    { id: 'narae', name: '나래국', color: '#ee8a1c', flag: 'solid' },
+    { id: 'daon',  name: '다온국', color: '#f2c12e', flag: 'solid' },
+    { id: 'raon',  name: '라온국', color: '#2f9e4f', flag: 'solid' }
   ];
 
   const STAGES = [

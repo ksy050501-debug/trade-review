@@ -28,13 +28,16 @@ const ICON={
  lotion:`<rect x="15" y="16" width="18" height="26" rx="4" fill="#f4a7b9"/><rect x="19" y="8" width="10" height="8" rx="2" fill="#d47a92"/><rect x="18" y="24" width="12" height="9" rx="2" fill="#fff" opacity=".8"/>`
 };
 const icon=(id,s)=>`<svg width="${s||40}" height="${s||40}" viewBox="0 0 48 48" aria-hidden="true">${ICON[id]||'<rect x="8" y="8" width="32" height="32" rx="8" fill="var(--accent)"/>'}</svg>`;
+// 나라 색: 가온국부터 빨강·주황·노랑·초록 단색 깃발
+const NEW_COL={gaon:'#d93a3a',narae:'#ee8a1c',daon:'#f2c12e',raon:'#2f9e4f'};
+const OLD_COL=['#2f6fdb','#d9622b','#13917f','#8e44b8'];
+// 예전 기본 색으로 만든 방도 새 색으로 보이게 함 (교사가 직접 바꾼 색은 그대로)
+function migrateCfg(c){if(!c||!c.countries)return c;c=JSON.parse(JSON.stringify(c));c.countries.forEach(x=>{if(OLD_COL.includes(String(x.color).toLowerCase())&&NEW_COL[x.id])x.color=NEW_COL[x.id];x.flag='solid'});return c}
+// 나라 색 위에 쓰는 글자색 (노랑처럼 밝은 색이면 어두운 글자)
+function ink(col){const m=/^#?([0-9a-f]{6})$/i.exec(String(col||''));if(!m)return '#fff';const n=parseInt(m[1],16),r=n>>16&255,g=n>>8&255,b=n&255;return (0.299*r+0.587*g+0.114*b)>165?'#14202c':'#fff'}
 function flag(c,w){
-  w=w||54;const h=Math.round(w*2/3);const col=esc(c.color);let body='';
-  if(c.flag==='circle')body=`<rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="5.5" fill="${col}"/>`;
-  else if(c.flag==='cross')body=`<rect width="30" height="20" fill="${col}"/><rect x="9" width="4" height="20" fill="#fff"/><rect y="8" width="30" height="4" fill="#fff"/>`;
-  else if(c.flag==='diagonal')body=`<rect width="30" height="20" fill="#fff"/><path d="M0 20L30 0V20z" fill="${col}"/><circle cx="8" cy="6" r="2.4" fill="${col}"/>`;
-  else body=`<rect width="30" height="20" fill="${col}"/><rect y="6.7" width="30" height="6.6" fill="#fff"/><rect x="2" y="2" width="4" height="3" fill="#fff" opacity=".8"/>`;
-  return `<svg class="flag" width="${w}" height="${h}" viewBox="0 0 30 20" role="img" aria-label="${esc(c.name)} 국기">${body}</svg>`;
+  w=w||54;const h=Math.round(w*2/3);
+  return `<svg class="flag" width="${w}" height="${h}" viewBox="0 0 30 20" role="img" aria-label="${esc(c.name)} 국기"><rect x=".5" y=".5" width="29" height="19" rx="1.5" fill="${esc(c.color)}" stroke="rgba(0,0,0,.18)"/></svg>`;
 }
 
 /* ---------- 도우미 ---------- */
@@ -77,7 +80,7 @@ function draft(cid,key){
 function saveDraft(cid,key){store.set(draftKey(cid,key),JSON.stringify(ui.drafts[cid+'.'+key]))}
 
 const STAGE_INTRO={
- 1:'오늘 우리 모둠은 무역 탐정단이에요. 태블릿은 하나, 머리는 여럿! 함께 의논해서 사건을 풀어요.',
+ 1:'오늘 우리 모둠은 무역 탐정단이에요. 컴퓨터는 하나, 머리는 여럿! 함께 의논해서 사건을 풀어요.',
  2:'무역·수출·수입의 뜻을 떠올리며, 문장이 진짜인지 가짜인지 모둠이 함께 판정해 주세요.',
  3:'카드에 적힌 일이 우리나라 입장에서 수출인지 수입인지 골라 주세요.',
  4:'물건마다 어느 나라와 오가는지 지도에서 찾고, 수출인지 수입인지 골라 주세요.',
@@ -85,7 +88,7 @@ const STAGE_INTRO={
  6:'오늘의 수사 보고예요. 우리가 남긴 질문의 답은 내일 직접 알아봐요.'
 };
 const TEACHER_GUIDE={
- 1:['입장 3분','입장 코드를 띄우고 모둠 태블릿 하나로 나라를 고르게 합니다. 모둠 이름은 내일 수업의 나라 이름과 같아요.'],
+ 1:['입장 3분','입장 코드를 띄우고 모둠 컴퓨터 한 대로 나라를 고르게 합니다. 모둠 이름은 내일 수업의 나라 이름과 같아요.'],
  2:['사건 1 · 7분','문장 8개 진짜/가짜 판정(진짜 4, 가짜 4). 서비스 무역, 돈의 흐름, 상대 나라 입장, 나라 안 거래를 따져야 풀립니다. 처음 제출한 답으로 점수를 매기고, 틀린 것은 고쳐서 다시 내야 해결됩니다.'],
  3:['사건 2 · 9분','상황 카드 10장 분류(수출 5, 수입 5). 카드마다 5점. "우리나라 입장에서" 생각하도록 안내해 주세요.'],
  4:['사건 3 · 10분','물건 7개의 상대 나라와 방향 찾기. 나라 5점 + 방향 5점. 사건 기록(배송 이야기)의 지리 단서로 나라를, 이야기의 흐름으로 방향을 찾습니다.'],
@@ -195,7 +198,7 @@ function closing(cid){
     <div class="panel"><h2>우리가 남긴 질문</h2>${f?`<div class="qnote">${icon(f.icon,36)}<div><b>${esc(f.title)}</b><p>추측: ${esc(c.curious.guess)}</p>${c.curious.question?`<p>질문: ${esc(c.curious.question)}</p>`:''}</div></div>`:'<p class="muted" style="margin:0">아직 보낸 생각이 없어요.</p>'}</div></section>`;
 }
 function welcome(){
-  return `<section class="panel"><h2>탐정단 약속</h2><ul class="rules"><li>태블릿은 모둠에 <b>한 대</b>예요. 누르기 전에 <b>모둠이 함께 의논</b>해요.</li><li>사건마다 <b>누르는 사람을 바꿔요.</b></li><li><b>처음 제출한 답</b>으로 점수를 매겨요. 틀린 것은 고쳐서 다시 내면 사건이 해결돼요.</li><li>막히면 오른쪽 아래 <b>갈매기 선장</b>을 눌러 보세요.</li></ul></section>
+  return `<section class="panel"><h2>탐정단 약속</h2><ul class="rules"><li>컴퓨터는 모둠에 <b>한 대</b>예요. 누르기 전에 <b>모둠이 함께 의논</b>해요.</li><li>사건마다 <b>누르는 사람을 바꿔요.</b></li><li><b>처음 제출한 답</b>으로 점수를 매겨요. 틀린 것은 고쳐서 다시 내면 사건이 해결돼요.</li><li>막히면 오른쪽 아래 <b>갈매기 선장</b>을 눌러 보세요.</li></ul></section>
    <section class="panel"><h2>오늘의 사건</h2><ol class="caselist">${L.STAGES.filter(s=>s.n>1&&s.n<6).map(s=>`<li><b>${esc(s.title)}</b>${s.n===5?' <span class="muted">(점수 없음)</span>':''}</li>`).join('')}</ol></section>`;
 }
 function studentView(cid){
@@ -337,7 +340,7 @@ const TradeUI={
     else{const h=location.hash.slice(1);const sv=store.get('review.view.'+o.mode);view=ok(h)?h:ok(sv)?sv:(o.tabs||['teacher'])[0]}
     ui.busy={};ui.drafts={};ui.active={};
   },
-  update(state,config,ex){
+  update(state,config,ex){config=migrateCfg(config);
     // 교사가 처음부터 다시 하면 이 기기에 남은 초안도 지움
     if(S&&state&&state.stage===1&&S.stage!==1){Object.keys(ui.drafts).forEach(k=>{const [c,key]=k.split('.');store.del(draftKey(c,key))});ui.drafts={}}
     S=state;cfg=config;extra=ex||{};render()},
